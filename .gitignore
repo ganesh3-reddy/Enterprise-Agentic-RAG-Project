@@ -1,0 +1,110 @@
+
+# ==========================================
+# Enterprise Agentic RAG - .gitignore
+# ==========================================
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+conda-env/
+
+# Environment variables and API secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and debugging
+*.log
+logs/
+debug/
+*.trace
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Local databases and checkpoints
+*.sqlite
+*.sqlite3
+*.db
+checkpoints/
+
+# Local vector databases
+lancedb/
+chroma_db/
+chroma/
+qdrant_storage/
+faiss_index/
+
+# Downloaded models and model caches
+models/
+model_cache/
+.cache/
+huggingface_cache/
+
+# Uploaded documents and private data
+uploads/
+private_data/
+data/raw/
+data/processed/
+
+# Generated outputs
+outputs/
+generated/
+reports/
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Local deployment overrides
+docker-compose.override.yml
+
+# Keep important dependency files tracked:
+# pyproject.toml
+# uv.lock
+# requirements.txt
+# README.md
+# .env.example
