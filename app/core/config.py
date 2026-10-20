@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     pinecone_api_key:str=""
     pinecone_index_name :str="fde-it-support-rag"
     pinecone_namespace:str="company-it-kb"
-    embedding_model:str="text-embedding-3-small"
+    embedding_model:str="all-MiniLM-L6-v2"
     openai_model:str="gpt-40-mini"
     top_k :int=4
     max_retries:int=1
