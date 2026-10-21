@@ -1,18 +1,20 @@
 from app.core.config import get_settings
-
-settings=get_settings()
-
-from app.services.ingestion import chunk_documents,load_file
+from app.services.ingestion import load_file,chunk_documents
+from pathlib import Path
 from app.rag.vectorstore import add_documents
 
-from pathlib import Path
+settings = get_settings()
 
-documents = load_file(Path("data/sample_kb/sample.pdf"))
+folder = Path(settings.sample_kb_dir)
 
-chunks = chunk_documents(documents)
+files = [f for f in folder.iterdir() if f.is_file()]
 
-print(f"Loaded {len(documents)} documents and split into {len(chunks)} chunks.")
-print(chunks[0].page_content[:500])
+all_documents = []
+
+for file in files:
+    all_documents.extend(load_file(file))
+chunked_documents = chunk_documents(all_documents)
+ids = add_documents(chunked_documents)
+print(f"Added {len(ids)} documents to the vector store.")
 
 
-add_documents(chunks)

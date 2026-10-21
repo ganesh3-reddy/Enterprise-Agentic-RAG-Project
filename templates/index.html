@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Enterprise Agentic RAG</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">✦</div>
+
+            <div>
+                <strong>Enterprise RAG</strong>
+                <span>AI Knowledge Assistant</span>
+            </div>
+        </div>
+
+        <button type="button"
+                class="add-documents-btn"
+                id="addDocumentsBtn">
+            <span>＋</span> Add Documents
+        </button>
+
+        <button type="button"
+                class="new-chat"
+                id="newChatBtn">
+            ＋ New Conversation
+        </button>
+
+        <div class="sidebar-section">
+            <div class="section-label">WORKSPACE</div>
+
+            <div class="sidebar-item active">
+                ◈ &nbsp; AI Assistant
+            </div>
+
+            <div class="sidebar-item">
+                ▤ &nbsp; Knowledge Base
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="status">
+                <span class="status-dot"></span>
+                <span>Agentic RAG System</span>
+            </div>
+
+            <small>Powered by LangGraph</small>
+        </div>
+    </aside>
+
+
+    <!-- MAIN CHAT AREA -->
+    <main class="main">
+
+        <header class="topbar">
+            <div class="topbar-left">
+
+                <button type="button"
+                        class="menu-btn"
+                        id="menuBtn"
+                        aria-label="Toggle sidebar">
+                    ☰
+                </button>
+
+                <div>
+                    <h1>Agentic RAG Assistant</h1>
+                    <p>
+                        Intelligent knowledge retrieval
+                        and reasoning
+                    </p>
+                </div>
+            </div>
+
+            <span class="model-badge">
+                ✦ AI Powered
+            </span>
+        </header>
+
+
+        <!-- CHAT CONTENT -->
+        <section class="chat-container" id="chatContainer">
+
+            <div class="welcome" id="welcome">
+
+                <div class="welcome-icon">✦</div>
+
+                <h2>How can I help you today?</h2>
+
+                <p>
+                    Ask questions about your knowledge base.
+                    The agent retrieves documents, evaluates
+                    evidence, and searches the web when needed.
+                </p>
+
+                <div class="suggestions">
+
+                    <button type="button"
+                            class="suggestion"
+                            data-question="What is Agentic RAG?">
+                        <span>🧠</span>
+                        <strong>Explain Agentic RAG</strong>
+                        <small>Learn the basic concepts</small>
+                    </button>
+
+                    <button type="button"
+                            class="suggestion"
+                            data-question="Explain LangGraph architecture">
+                        <span>⚡</span>
+                        <strong>LangGraph Architecture</strong>
+                        <small>Understand agent workflows</small>
+                    </button>
+
+                    <button type="button"
+                            class="suggestion"
+                            data-question="What is corrective RAG?">
+                        <span>📚</span>
+                        <strong>Corrective RAG</strong>
+                        <small>Explore retrieval techniques</small>
+                    </button>
+
+                    <button type="button"
+                            class="suggestion"
+                            data-question="Give examples of Agentic RAG">
+                        <span>🌐</span>
+                        <strong>Agentic RAG Examples</strong>
+                        <small>Explore real-world use cases</small>
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="messages"
+                 id="messages"
+                 aria-live="polite"></div>
+
+        </section>
+
+
+        <!-- CHAT INPUT -->
+        <div class="composer-area">
+
+            <form class="composer" id="chatForm">
+
+                <textarea
+                    id="questionInput"
+                    rows="1"
+                    placeholder="Ask your Agentic RAG assistant..."
+                    aria-label="Your question"
+                    required></textarea>
+
+                <button type="submit"
+                        id="sendBtn"
+                        aria-label="Send question">
+                    ➤
+                </button>
+
+            </form>
+
+            <div class="composer-footer">
+                <span>Knowledge Base + Web Search + LLM</span>
+                <span>
+                    Enter to send · Shift+Enter for new line
+                </span>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- DOCUMENT UPLOAD MODAL -->
+<div class="upload-modal-overlay"
+     id="uploadModal"
+     aria-hidden="true">
+
+    <div class="upload-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="uploadModalTitle"
+         tabindex="-1">
+
+        <div class="upload-modal-header">
+
+            <h2 id="uploadModalTitle">
+                Ingest Company Document
+            </h2>
+
+            <button type="button"
+                    id="closeUploadModal"
+                    class="upload-close-btn"
+                    aria-label="Close dialog">
+                &times;
+            </button>
+
+        </div>
+
+        <p class="upload-description">
+            Upload a PDF, TXT, Markdown, or DOCX file.
+            The document will be chunked, embedded,
+            and indexed into Pinecone.
+        </p>
+
+        <form id="uploadDocumentForm">
+
+            <label class="upload-label"
+                   for="adminApiKey">
+                Admin API Key
+            </label>
+
+            <input
+                type="password"
+                id="adminApiKey"
+                name="adminApiKey"
+                placeholder="Enter Admin API key"
+                autocomplete="off"
+                required
+            >
+
+            <label class="upload-label"
+                   for="documentFile">
+                Select Document
+            </label>
+
+            <input
+                type="file"
+                id="documentFile"
+                name="file"
+                accept=".pdf,.txt,.md,.docx"
+                required
+            >
+
+            <p class="upload-file-name"
+               id="selectedFileName"></p>
+
+            <button type="submit"
+                    class="index-document-btn"
+                    id="indexDocumentBtn">
+                Index Document
+            </button>
+
+            <p class="upload-status"
+               id="uploadStatus"
+               role="status"
+               aria-live="polite"></p>
+
+        </form>
+    </div>
+</div>
+
+
+<!-- JAVASCRIPT: LOADED AFTER ALL HTML -->
+<script src="{{ url_for('static', path='/js/app.js') }}"></script>
+
+</body>
+</html>

@@ -1,18 +1,5 @@
+import uvicorn
 
-from app.rag.vectorstore import get_embedding
-from app.core.config import get_settings
-
-embedding = get_embedding()
-
-vector = embedding.embed_query("What is Agentic RAG?")
-from app.rag.vectorstore import get_embedding_dimensions
-print("Actual dimension:", len(vector))
-print("Configured dimension:", get_embedding_dimensions(
-    get_settings().embedding_model
-))
-
-print(
-    get_embedding_dimensions(
-        "sentence-transformers/all-MiniLM-L6-v2"
-    )
-)
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+    
