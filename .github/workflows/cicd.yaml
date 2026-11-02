@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="${REGISTRY}/${ECR_REPOSITORY}:${SHA}"
-          docker build --pull -t "$IMAGE" .
+          docker build -f DockerFile --pull -t "$IMAGE" .
           docker push "$IMAGE"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
