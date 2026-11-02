@@ -19,3 +19,7 @@ python-docx
 python-dotenv
 langchain-groq
 langfuse
+boto3
+psycopg
+psycopg-binary
+psycopg-pool

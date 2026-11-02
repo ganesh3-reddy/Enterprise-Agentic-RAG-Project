@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.core.logging import configure_logging
-from app.services.audit import initialize_audit_db
+from app.services.audit_postgres import write_postgres_audit
 
 base_dir1 = Path(__file__).resolve().parent.parent
 base_dir1 = Path(__file__).resolve().parent.parent
@@ -18,7 +18,6 @@ print("STATIC EXISTS:", (base_dir1 / "static").is_dir())
 print("TEMPLATES EXISTS:", (base_dir1 / "templates").is_dir())
 
 configure_logging()
-initialize_audit_db()
 settings = get_settings()
 
 app = FastAPI(title=settings.app_name,description="Enterprise IT Agentic RAG",version="1.0.0")

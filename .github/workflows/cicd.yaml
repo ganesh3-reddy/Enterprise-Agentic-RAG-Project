@@ -1,0 +1,169 @@
+name: Enterprise Agentic RAG CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - README.md
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: enterprise-rag-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REPOSITORY: enterprise-agentic-rag
+  CONTAINER_NAME: enterprise-agentic-rag
+  APP_PORT: "8080"
+
+jobs:
+  integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q app
+
+  build-and-push:
+    name: Build and push to Amazon ECR
+    needs: integration
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build
+        shell: bash
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          IMAGE="${REGISTRY}/${ECR_REPOSITORY}:${SHA}"
+          docker build --pull -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-and-push
+    runs-on: [self-hosted, linux, x64, enterprise-rag]
+    environment: production
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Pull image
+        shell: bash
+        env:
+          IMAGE: ${{ needs.build-and-push.outputs.image }}
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE"
+
+      - name: Deploy container
+        shell: bash
+        env:
+          IMAGE: ${{ needs.build-and-push.outputs.image }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+          PINECONE_NAMESPACE: ${{ secrets.PINECONE_NAMESPACE }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL || 'https://us.cloud.langfuse.com' }}
+          S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+
+          REQUIRED=(GROQ_API_KEY PINECONE_API_KEY PINECONE_INDEX_NAME TAVILY_API_KEY DATABASE_URL)
+          for name in "${REQUIRED[@]}"; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing GitHub secret: $name"
+              exit 1
+            fi
+          done
+
+          # Stop old deployment only after image pull and configuration validation.
+          docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            --restart unless-stopped \
+            -p "${APP_PORT}:${APP_PORT}" \
+            -e GROQ_API_KEY \
+            -e PINECONE_API_KEY \
+            -e PINECONE_INDEX_NAME \
+            -e PINECONE_NAMESPACE \
+            -e TAVILY_API_KEY \
+            -e DATABASE_URL \
+            -e LANGFUSE_PUBLIC_KEY \
+            -e LANGFUSE_SECRET_KEY \
+            -e LANGFUSE_BASE_URL \
+            -e S3_BUCKET_NAME \
+            "$IMAGE"
+
+      - name: Verify deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..20}; do
+            if [[ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || true)" != "true" ]]; then
+              echo "::error::Container stopped unexpectedly"
+              docker logs --tail 100 "$CONTAINER_NAME" || true
+              exit 1
+            fi
+            if curl -fsS --max-time 5 "http://127.0.0.1:${APP_PORT}/docs" -o /dev/null; then
+              echo "Deployment health check passed"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::FastAPI did not become healthy"
+          docker logs --tail 100 "$CONTAINER_NAME" || true
+          exit 1
+
+      - name: Remove dangling Docker images
+        if: success()
+        shell: bash
+        run: docker image prune -f

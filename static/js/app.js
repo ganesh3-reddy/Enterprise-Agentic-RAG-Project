@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     console.log("Enterprise RAG frontend initialized.");
+    
 
     let isLoading = false;
     let isUploading = false;

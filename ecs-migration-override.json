@@ -1,0 +1,13 @@
+
+{
+  "containerOverrides": [
+    {
+      "name": "enterprise-rag-api",
+      "command": [
+        "python",
+        "-c",
+        "import os, psycopg; sql = \"CREATE TABLE IF NOT EXISTS audit_logs (id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, user_query TEXT NOT NULL, answer TEXT, source_used VARCHAR(30), status VARCHAR(20) DEFAULT 'success', created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP, retries INTEGER)\"; conn = psycopg.connect(os.environ['DATABASE_URL'], connect_timeout=10); conn.execute(sql); conn.commit(); conn.close(); print('RDS audit_logs table created successfully')"
+      ]
+    }
+  ]
+}

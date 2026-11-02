@@ -279,11 +279,11 @@ def ask_agent(question:str,config=None):
     result = graph.invoke(initial_state,config=config)
 
     print("="*90)
-    print(f'Question : {question}')
+    print(f"Question : {question}")
     print("="*90)
-    print(f'source used : {result['source_used']}')
+    print(f"source used : {result['source_used']}")
     print("="*90)
-    print(f'result : {result["answer"]}')
+    print(f"result : {result['answer']}")
 
     return result
 

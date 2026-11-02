@@ -12,3 +12,5 @@ env
 .pytest_cache
 tests
 *.log
+uploads/
+data/

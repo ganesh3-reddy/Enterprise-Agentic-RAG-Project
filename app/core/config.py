@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     langfuse_api_key:str=""
     langfuse_secret_key:str=""
     langfuse_base_url:str="https://us.cloud.langfuse.com"
+    aws_region:str="ap-southeast-2"
+    s3_bucket_name:str="enterprise-rag-docs-587787861821"
+    aws_profile: str | None = None
+    
 
 
     model_config=SettingsConfigDict(env_file=str(base_dir/".env"),extra="ignore")

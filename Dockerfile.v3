@@ -1,0 +1,5 @@
+FROM enterprise-agentic-rag:v2
+
+WORKDIR /app
+
+COPY templates/index.html /app/templates/index.html
